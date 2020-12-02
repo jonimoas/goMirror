@@ -1,0 +1,32 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>goMirror</title>
+  </head>
+  <body bgcolor="#000000">
+    <button id="send">Start</button>
+    <button id="end">Stop</button>
+    <br />
+    <img src="" id="screen" />
+  </body>
+  <script>
+    var ws = new WebSocket("{{.}}");
+    document.getElementById("send").onclick = function (evt) {
+      ws = new WebSocket("{{.}}");
+      ws.onmessage = function (evt) {
+        document.getElementById("screen").src = evt.data;
+        //ws.send("go");
+        return false;
+      };
+      ws.onopen = function (evt) {
+        ws.send("go");
+        return false;
+      };
+      return false;
+    };
+    document.getElementById("end").onclick = function (evt) {
+      ws.close();
+      return false;
+    };
+  </script>
+</html>
