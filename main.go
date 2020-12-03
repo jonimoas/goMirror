@@ -75,7 +75,7 @@ func input(w http.ResponseWriter, r *http.Request) {
 			case "R":
 				robotgo.MoveSmoothRelative(10, 0, 3.0, 30.0)
 			case "C":
-				robotgo.MouseClick("left", true)
+				robotgo.MouseClick("left", false)
 			}
 		}
 	}
