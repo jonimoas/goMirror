@@ -10,23 +10,57 @@
     <img src="" id="screen" />
   </body>
   <script>
-    var ws = new WebSocket("{{.}}");
+    var screenSocket = new WebSocket("{{.screen}}");
+    var inputSocket = new WebSocket("{{.input}}");
     document.getElementById("send").onclick = function (evt) {
-      ws = new WebSocket("{{.}}");
-      ws.onmessage = function (evt) {
+      screenSocket = new WebSocket("{{.screen}}");
+      screenSocket.onmessage = function (evt) {
         document.getElementById("screen").src = evt.data;
-        //ws.send("go");
         return false;
       };
-      ws.onopen = function (evt) {
-        ws.send("go");
+      screenSocket.onopen = function (evt) {
+        screenSocket.send("go");
         return false;
       };
       return false;
     };
     document.getElementById("end").onclick = function (evt) {
-      ws.close();
+      screenSocket.close();
       return false;
     };
+    document.getElementById("screen").onclick = function (evt) {
+      var move = false;
+      bounds=this.getBoundingClientRect();
+      var left=bounds.left;
+      var top=bounds.top;
+      var x = event.pageX - left;
+      var y = event.pageY - top;
+      var cw=this.clientWidth
+      var ch=this.clientHeight
+      var iw=this.naturalWidth
+      var ih=this.naturalHeight
+      var px=x/cw*iw
+      var py=y/ch*ih
+      if (px<=iw*0.2){
+        move = true;
+        inputSocket.send("M-L");
+      }
+      if (py<=ih*0.2){
+        move = true;
+        inputSocket.send("M-U");
+      }
+      if (px>=iw-(0.2*iw)){
+        move = true;
+        inputSocket.send("M-R");
+      }
+      if (py>=ih-(0.2*ih)){
+        move = true;
+        inputSocket.send("M-D");
+      }
+      if (!move){
+        inputSocket.send("M-C");
+      }
+    };
+
   </script>
 </html>
