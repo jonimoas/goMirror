@@ -9,7 +9,9 @@ and on the center to perform a left click!
 Just run, access the system's IP
 address through a browser and click start!
 
-WebSocket       - https://github.com/gorilla/websocket
-ScreenShot      - github.com/vova616/screenshot
-RobotGo         - github.com/go-vgo/robotgo
-Resize          - github.com/nfnt/resize
+Libraries:
+
+            WebSocket       - https://github.com/gorilla/websocket
+            ScreenShot      - https://github.com/vova616/screenshot
+            RobotGo         - https://github.com/go-vgo/robotgo
+            Resize          - https://github.com/nfnt/resize
