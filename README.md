@@ -6,6 +6,9 @@ a web page in port 80.
 Mouse usage is also possible, click on the edges of the screen to move the mouse
 and on the center to perform a left click!
 
+If you click on the capture keyboard checkbox, you can send single keystrokes to the 
+remote machine!
+
 Just run, access the system's IP
 address through a browser and click start!
 
