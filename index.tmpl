@@ -6,6 +6,8 @@
   <body bgcolor="#000000">
     <button id="send">Start</button>
     <button id="end">Stop</button>
+    <input type="checkbox" id="capturekey" name="capturekey" value="capturekey">
+    <label for="capturekey" style="color:white">Capture Keyboard</label>
     <br />
     <img src="" id="screen" />
   </body>
@@ -61,6 +63,15 @@
         inputSocket.send("M-C");
       }
     };
-
+    window.addEventListener("keydown", function (event) {
+      if (event.defaultPrevented) {
+        return;
+      }
+      if(document.getElementById("capturekey").checked){
+        inputSocket.send("K-"+event.key);
+        event.preventDefault();
+        return false;
+      }
+    }, true);
   </script>
 </html>

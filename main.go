@@ -11,6 +11,7 @@ import (
 	"image/png"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/go-vgo/robotgo"
 	"github.com/gorilla/websocket"
@@ -76,6 +77,10 @@ func input(w http.ResponseWriter, r *http.Request) {
 				robotgo.MoveSmoothRelative(10, 0, 3.0, 30.0)
 			case "C":
 				robotgo.MouseClick("left", false)
+			}
+		} else {
+			if string(string(message)[0]) == "K" {
+				robotgo.KeyTap(strings.Replace(strings.Replace(string(strings.ToLower(string(message)[2:len(string(message))])), "key", "", -1), "arrow", "", -1))
 			}
 		}
 	}
