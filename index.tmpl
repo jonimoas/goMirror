@@ -1,77 +1,25 @@
+
 <html>
   <head>
     <meta charset="utf-8" />
     <title>goMirror</title>
   </head>
   <body bgcolor="#000000">
-    <button id="send">Start</button>
+    <button id="start">Start</button>
     <button id="end">Stop</button>
-    <input type="checkbox" id="capturekey" name="capturekey" value="capturekey">
-    <label for="capturekey" style="color:white">Capture Keyboard</label>
+    <input
+      type="checkbox"
+      id="capturekey"
+      name="capturekey"
+      value="capturekey"
+    />
+    <label for="capturekey" style="color: white">Capture Keyboard</label>
+    <input type="checkbox" id="queuekey" name="queuekey" value="queuekey" />
+    <label for="queuekey" style="color: white">Queue Keyboard</label>
+    <button id="send">Send Queue</button>
     <br />
-    <img src="" id="screen" />
+    <img src="" id="screen" style="touch-action: manipulation" />
   </body>
-  <script>
-    var screenSocket = new WebSocket("{{.screen}}");
-    var inputSocket = new WebSocket("{{.input}}");
-    document.getElementById("send").onclick = function (evt) {
-      screenSocket = new WebSocket("{{.screen}}");
-      screenSocket.onmessage = function (evt) {
-        document.getElementById("screen").src = evt.data;
-        return false;
-      };
-      screenSocket.onopen = function (evt) {
-        screenSocket.send("go");
-        return false;
-      };
-      return false;
-    };
-    document.getElementById("end").onclick = function (evt) {
-      screenSocket.close();
-      return false;
-    };
-    document.getElementById("screen").onclick = function (evt) {
-      var move = false;
-      bounds=this.getBoundingClientRect();
-      var left=bounds.left;
-      var top=bounds.top;
-      var x = event.pageX - left;
-      var y = event.pageY - top;
-      var cw=this.clientWidth
-      var ch=this.clientHeight
-      var iw=this.naturalWidth
-      var ih=this.naturalHeight
-      var px=x/cw*iw
-      var py=y/ch*ih
-      if (px<=iw*0.2){
-        move = true;
-        inputSocket.send("M-L");
-      }
-      if (py<=ih*0.2){
-        move = true;
-        inputSocket.send("M-U");
-      }
-      if (px>=iw-(0.2*iw)){
-        move = true;
-        inputSocket.send("M-R");
-      }
-      if (py>=ih-(0.2*ih)){
-        move = true;
-        inputSocket.send("M-D");
-      }
-      if (!move){
-        inputSocket.send("M-C");
-      }
-    };
-    window.addEventListener("keydown", function (event) {
-      if (event.defaultPrevented) {
-        return;
-      }
-      if(document.getElementById("capturekey").checked){
-        inputSocket.send("K-"+event.key);
-        event.preventDefault();
-        return false;
-      }
-    }, true);
-  </script>
+  <script src="script"></script>
 </html>
+
