@@ -21,4 +21,4 @@ Libraries:
             ScreenShot      - https://github.com/vova616/screenshot
             RobotGo         - https://github.com/go-vgo/robotgo
 
-![Screenshot](/screenshot.PNG)
+![Screenshot](/screenshot.png)
