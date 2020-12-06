@@ -12,8 +12,8 @@ remote machine!
 If you enable the queue, all keys will be stored and will either be pressed simulteneously
 when you press the button, or cleared if you uncheck the box!
 
-Just run, access the system's IP
-address through a browser and click start!
+Just run, access the system's IP address through a browser, click start and enter the password
+that is displayed on the console window of the host computer! 
 
 Libraries:
 

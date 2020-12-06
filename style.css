@@ -1,0 +1,8 @@
+label {
+    color: white;
+}
+
+#screen {
+    touch-action: manipulation;
+    transition-timing-function: linear;
+}

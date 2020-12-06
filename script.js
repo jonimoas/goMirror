@@ -1,7 +1,9 @@
-var screenSocket = new WebSocket("{{.screen}}");
-var inputSocket = new WebSocket("{{.input}}");
+var screenSocket;
+var inputSocket;
 document.getElementById("start").onclick = function (evt) {
-  screenSocket = new WebSocket("{{.screen}}");
+  var password = prompt("Enter Password");
+  screenSocket = new WebSocket("{{.screen}}" + "?password=" + password);
+  inputSocket = new WebSocket("{{.input}}" + "?password=" + password);
   screenSocket.onmessage = function (evt) {
     document.getElementById("screen").src = evt.data;
     return false;

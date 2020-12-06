@@ -11,18 +11,18 @@ import (
 	"image/draw"
 	"image/jpeg"
 	"log"
+	"math/rand"
 	"net"
 	"net/http"
 	"os"
 	"strings"
 	ttemplate "text/template"
+	"time"
 
 	"github.com/go-vgo/robotgo"
 	"github.com/gorilla/websocket"
 	"github.com/vova616/screenshot"
 )
-
-var keyBuffer []string
 
 func main() {
 	flag.Parse()
@@ -30,6 +30,7 @@ func main() {
 	http.HandleFunc("/screen", screen)
 	http.HandleFunc("/input", input)
 	http.HandleFunc("/script", script)
+	http.HandleFunc("/style", style)
 	http.HandleFunc("/", home)
 	fmt.Println("IP Addresses:")
 	host, _ := os.Hostname()
@@ -39,6 +40,7 @@ func main() {
 			fmt.Println("IPv4: ", ipv4)
 		}
 	}
+	fmt.Println("Password: " + password)
 	log.Fatal(http.ListenAndServe(":80", nil))
 }
 
@@ -46,6 +48,11 @@ func makeImage() string {
 	img, err := screenshot.CaptureScreen()
 	x, y := robotgo.GetMousePos()
 	c := color.White
+	r, g, b, a := img.At(x, y).RGBA()
+	_ = a
+	if r > 40000 && g > 40000 && b > 40000 {
+		c = color.Black
+	}
 	pointer := image.Rect(x-5, y-5, x+5, y+5)
 	draw.Draw(img, pointer, &image.Uniform{c}, image.ZP, draw.Src)
 	if err != nil {
@@ -58,9 +65,20 @@ func makeImage() string {
 	return htmlImage
 }
 
-var upgrader = websocket.Upgrader{}
+func authenticate(w http.ResponseWriter, r *http.Request) bool {
+	query := r.URL.Query()
+	pass := query.Get("password")
+	if pass != password {
+		w.WriteHeader(403)
+		return false
+	}
+	return true
+}
 
 func input(w http.ResponseWriter, r *http.Request) {
+	if !authenticate(w, r) {
+		return
+	}
 	c, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Print("upgrade:", err)
@@ -117,7 +135,11 @@ func input(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 }
+
 func screen(w http.ResponseWriter, r *http.Request) {
+	if !authenticate(w, r) {
+		return
+	}
 	c, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Print("upgrade:", err)
@@ -154,5 +176,23 @@ func script(w http.ResponseWriter, r *http.Request) {
 	scriptTemplate.Execute(w, sockets)
 }
 
+func style(w http.ResponseWriter, r *http.Request) {
+	styleTemplate.Execute(w, nil)
+}
+
+func randSeq(n int) string {
+	rand.Seed(time.Now().Unix())
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(b)
+}
+
+var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890")
 var homeTemplate, errH = htemplate.ParseGlob("*.tmpl")
 var scriptTemplate, errS = ttemplate.ParseGlob("*.js")
+var styleTemplate, errC = ttemplate.ParseGlob("*.css")
+var upgrader = websocket.Upgrader{}
+var keyBuffer []string
+var password = randSeq(6)
