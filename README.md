@@ -15,6 +15,8 @@ when you press the button, or cleared if you uncheck the box!
 Just run, access the system's IP address through a browser, click start and enter the password
 that is displayed on the console window of the host computer! 
 
+NOTE: if you want to rebuild the frontend, you need to use rice and the rice embed-go command.
+
 Libraries:
 
             WebSocket       - https://github.com/gorilla/websocket
