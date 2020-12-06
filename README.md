@@ -20,5 +20,6 @@ Libraries:
             WebSocket       - https://github.com/gorilla/websocket
             ScreenShot      - https://github.com/vova616/screenshot
             RobotGo         - https://github.com/go-vgo/robotgo
+            Rice            - https://github.com/GeertJohan/go.rice
 
 ![Screenshot](/screenshot.png)

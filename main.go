@@ -19,6 +19,7 @@ import (
 	ttemplate "text/template"
 	"time"
 
+	rice "github.com/GeertJohan/go.rice"
 	"github.com/go-vgo/robotgo"
 	"github.com/gorilla/websocket"
 	"github.com/vova616/screenshot"
@@ -189,10 +190,14 @@ func randSeq(n int) string {
 	return string(b)
 }
 
+var box = rice.MustFindBox("frontend")
+var tmpl, errTMPL = box.String("index.tmpl")
+var css, errCSS = box.String("style.css")
+var js, errJS = box.String("script.js")
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890")
-var homeTemplate, errH = htemplate.ParseGlob("*.tmpl")
-var scriptTemplate, errS = ttemplate.ParseGlob("*.js")
-var styleTemplate, errC = ttemplate.ParseGlob("*.css")
+var homeTemplate, errH = htemplate.New("home").Parse(tmpl)
+var scriptTemplate, errS = ttemplate.New("script").Parse(js)
+var styleTemplate, errC = ttemplate.New("style").Parse(css)
 var upgrader = websocket.Upgrader{}
 var keyBuffer []string
 var password = randSeq(6)
