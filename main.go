@@ -23,7 +23,7 @@ import (
 	rice "github.com/GeertJohan/go.rice"
 	"github.com/go-vgo/robotgo"
 	"github.com/gorilla/websocket"
-	"github.com/vova616/screenshot"
+	"github.com/kbinani/screenshot"
 )
 
 func main() {
@@ -52,13 +52,15 @@ func main() {
 	} else {
 		fps = 60
 	}
+	maxfps = fps
 	calculateFrameTime()
 	log.Fatal(http.ListenAndServe(":80", nil))
 }
 
 func makeImage() {
 	imageStart := time.Now()
-	img, err := screenshot.CaptureScreen()
+	all := screenshot.GetDisplayBounds(0).Union(image.Rect(0, 0, 0, 0))
+	img, err := screenshot.Capture(all.Min.X, all.Min.Y, all.Dx(), all.Dy())
 	if err != nil {
 		fmt.Println("Screenshot: ", err)
 	}
@@ -165,6 +167,7 @@ func screen(w http.ResponseWriter, r *http.Request) {
 		if string(message) == "go" {
 			for {
 				go makeImage()
+				time.Sleep(frameTime)
 				if lastScreen != "" {
 					err := c.WriteMessage(mt, []byte(lastScreen))
 					if err != nil {
@@ -172,7 +175,6 @@ func screen(w http.ResponseWriter, r *http.Request) {
 						break
 					}
 				}
-				time.Sleep(frameTime)
 			}
 		}
 
@@ -205,9 +207,7 @@ func randSeq(n int) string {
 }
 
 func calculateFrameTime() {
-	fmt.Println("FPS: " + strconv.Itoa(fps))
 	frameTime = time.Duration(1000/fps) * time.Millisecond
-	fmt.Println("New Frametime: " + frameTime.String())
 }
 
 func checkReduceFPS(start time.Time) {
@@ -231,5 +231,6 @@ var upgrader = websocket.Upgrader{}
 var keyBuffer []string
 var password = randSeq(6)
 var fps int
+var maxfps int
 var frameTime time.Duration
 var lastScreen = ""
