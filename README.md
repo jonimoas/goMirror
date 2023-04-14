@@ -13,14 +13,16 @@ If you enable the queue, all keys will be stored and will either be pressed simu
 when you press the button, or cleared if you uncheck the box!
 
 Just run, access the system's IP address through a browser, click start and enter the password
-that is displayed on the console window of the host computer! 
+that is displayed on the console window of the host computer!
+
+FPS is calculated in real time to avoid overloading the CPU
 
 NOTE: if you want to rebuild the frontend, you need to use rice and the rice embed-go command.
 
 Libraries:
 
             WebSocket       - https://github.com/gorilla/websocket
-            ScreenShot      - https://github.com/vova616/screenshot
+            ScreenShot      - https://github.com/kbinani/screenshot
             RobotGo         - https://github.com/go-vgo/robotgo
             Rice            - https://github.com/GeertJohan/go.rice
 
