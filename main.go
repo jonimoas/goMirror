@@ -15,6 +15,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	ttemplate "text/template"
 	"time"
@@ -22,7 +23,7 @@ import (
 	rice "github.com/GeertJohan/go.rice"
 	"github.com/go-vgo/robotgo"
 	"github.com/gorilla/websocket"
-	"github.com/vova616/screenshot"
+	"github.com/kbinani/screenshot"
 )
 
 func main() {
@@ -42,11 +43,27 @@ func main() {
 		}
 	}
 	fmt.Println("Password: " + password)
+	var err error
+	if len(os.Args) > 1 {
+		fps, err = strconv.Atoi(os.Args[1])
+		if err != nil {
+			fps = 60
+		}
+	} else {
+		fps = 60
+	}
+	maxfps = fps
+	calculateFrameTime()
 	log.Fatal(http.ListenAndServe(":80", nil))
 }
 
-func makeImage() string {
-	img, err := screenshot.CaptureScreen()
+func makeImage() {
+	imageStart := time.Now()
+	all := screenshot.GetDisplayBounds(0).Union(image.Rect(0, 0, 0, 0))
+	img, err := screenshot.Capture(all.Min.X, all.Min.Y, all.Dx(), all.Dy())
+	if err != nil {
+		fmt.Println("Screenshot: ", err)
+	}
 	x, y := robotgo.GetMousePos()
 	c := color.White
 	r, g, b, a := img.At(x, y).RGBA()
@@ -54,16 +71,11 @@ func makeImage() string {
 	if r > 40000 && g > 40000 && b > 40000 {
 		c = color.Black
 	}
-	pointer := image.Rect(x-5, y-5, x+5, y+5)
-	draw.Draw(img, pointer, &image.Uniform{c}, image.ZP, draw.Src)
-	if err != nil {
-		panic(err)
-	}
+	draw.Draw(img, image.Rect(x-5, y-5, x+5, y+5), &image.Uniform{c}, image.ZP, draw.Src)
 	var buff bytes.Buffer
 	jpeg.Encode(&buff, img, &jpeg.Options{Quality: 50})
-	encodedString := base64.StdEncoding.EncodeToString(buff.Bytes())
-	htmlImage := "data:image/jpeg;base64," + encodedString
-	return htmlImage
+	lastScreen = "data:image/jpeg;base64," + base64.StdEncoding.EncodeToString(buff.Bytes())
+	checkReduceFPS(imageStart)
 }
 
 func authenticate(w http.ResponseWriter, r *http.Request) bool {
@@ -82,13 +94,13 @@ func input(w http.ResponseWriter, r *http.Request) {
 	}
 	c, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Print("upgrade:", err)
+		fmt.Print("upgrade:", err)
 		return
 	}
 	for {
 		mt, message, err := c.ReadMessage()
 		if err != nil {
-			log.Println("read:", err)
+			fmt.Println("read:", err)
 			break
 		}
 		_ = mt
@@ -143,21 +155,25 @@ func screen(w http.ResponseWriter, r *http.Request) {
 	}
 	c, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Print("upgrade:", err)
+		fmt.Print("upgrade:", err)
 		return
 	}
 	for {
 		mt, message, err := c.ReadMessage()
 		if err != nil {
-			log.Println("read:", err)
+			fmt.Println("read:", err)
 			break
 		}
 		if string(message) == "go" {
 			for {
-				err = c.WriteMessage(mt, []byte(makeImage()))
-				if err != nil {
-					log.Println("write:", err)
-					break
+				go makeImage()
+				time.Sleep(frameTime)
+				if lastScreen != "" {
+					err := c.WriteMessage(mt, []byte(lastScreen))
+					if err != nil {
+						fmt.Println("write:", err)
+						break
+					}
 				}
 			}
 		}
@@ -190,6 +206,19 @@ func randSeq(n int) string {
 	return string(b)
 }
 
+func calculateFrameTime() {
+	frameTime = time.Duration(1000/fps) * time.Millisecond
+}
+
+func checkReduceFPS(start time.Time) {
+	if time.Now().UnixMilli()-start.UnixMilli() > frameTime.Milliseconds() {
+		fps = fps / 2
+	} else {
+		fps = fps * 2
+	}
+	calculateFrameTime()
+}
+
 var box = rice.MustFindBox("frontend")
 var tmpl, errTMPL = box.String("index.tmpl")
 var css, errCSS = box.String("style.css")
@@ -201,3 +230,7 @@ var styleTemplate, errC = ttemplate.New("style").Parse(css)
 var upgrader = websocket.Upgrader{}
 var keyBuffer []string
 var password = randSeq(6)
+var fps int
+var maxfps int
+var frameTime time.Duration
+var lastScreen = ""
