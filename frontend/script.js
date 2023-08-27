@@ -15,6 +15,7 @@ document.getElementById("start").onclick = function (evt) {
   return false;
 };
 document.getElementById("end").onclick = function (evt) {
+  screenSocket.send("stop");
   screenSocket.close();
   return false;
 };
@@ -94,3 +95,7 @@ window.addEventListener(
   },
   true
 );
+window.addEventListener("beforeunload", function(e){
+  screenSocket.send("stop");
+  screenSocket.close();
+});

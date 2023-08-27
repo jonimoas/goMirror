@@ -60,24 +60,26 @@ func main() {
 }
 
 func makeImage() {
-	imageStart := time.Now()
-	all := screenshot.GetDisplayBounds(0).Union(image.Rect(0, 0, 0, 0))
-	img, err := screenshot.Capture(all.Min.X, all.Min.Y, all.Dx(), all.Dy())
-	if err != nil {
-		fmt.Println("Screenshot: ", err)
+	if active == true {
+		imageStart := time.Now()
+		all := screenshot.GetDisplayBounds(0).Union(image.Rect(0, 0, 0, 0))
+		img, err := screenshot.Capture(all.Min.X, all.Min.Y, all.Dx(), all.Dy())
+		if err != nil {
+			fmt.Println("Screenshot: ", err)
+		}
+		x, y := robotgo.GetMousePos()
+		c := color.White
+		r, g, b, a := img.At(x, y).RGBA()
+		_ = a
+		if r > 40000 && g > 40000 && b > 40000 {
+			c = color.Black
+		}
+		draw.Draw(img, image.Rect(x-5, y-5, x+5, y+5), &image.Uniform{c}, image.ZP, draw.Src)
+		var buff bytes.Buffer
+		jpeg.Encode(&buff, img, &jpeg.Options{Quality: 50})
+		lastScreen = "data:image/jpeg;base64," + base64.StdEncoding.EncodeToString(buff.Bytes())
+		checkReduceFPS(imageStart)
 	}
-	x, y := robotgo.GetMousePos()
-	c := color.White
-	r, g, b, a := img.At(x, y).RGBA()
-	_ = a
-	if r > 40000 && g > 40000 && b > 40000 {
-		c = color.Black
-	}
-	draw.Draw(img, image.Rect(x-5, y-5, x+5, y+5), &image.Uniform{c}, image.ZP, draw.Src)
-	var buff bytes.Buffer
-	jpeg.Encode(&buff, img, &jpeg.Options{Quality: 50})
-	lastScreen = "data:image/jpeg;base64," + base64.StdEncoding.EncodeToString(buff.Bytes())
-	checkReduceFPS(imageStart)
 }
 
 func authenticate(w http.ResponseWriter, r *http.Request) bool {
@@ -164,25 +166,38 @@ func screen(w http.ResponseWriter, r *http.Request) {
 		mt, message, err := c.ReadMessage()
 		if err != nil {
 			fmt.Println("read:", err)
+			active = false
 			break
 		}
 		if string(message) == "go" {
-			for {
-				go makeImage()
-				time.Sleep(frameTime)
-				if lastScreen != "" {
-					err := c.WriteMessage(mt, []byte(lastScreen))
-					if err != nil {
-						fmt.Println("write:", err)
-						break
-					}
-				}
-			}
+			active = true
+			go socketActivity(c, mt)
+		}
+		if string(message) == "stop" {
+			c.Close()
+			active = false
 		}
 
 	}
 }
 
+func socketActivity(c *websocket.Conn, mt int) {
+	for {
+		go makeImage()
+		time.Sleep(frameTime)
+		if lastScreen != "" {
+			err := c.WriteMessage(mt, []byte(lastScreen))
+			if err != nil {
+				fmt.Println("write:", err)
+				active = false
+				break
+			}
+		}
+		if active == false {
+			break
+		}
+	}
+}
 func home(w http.ResponseWriter, r *http.Request) {
 	homeTemplate.Execute(w, nil)
 }
@@ -218,6 +233,8 @@ func checkReduceFPS(start time.Time) {
 	} else {
 		fps = fps * 2
 	}
+	fmt.Printf("FPS: " + strconv.Itoa(fps))
+	fmt.Printf("\r")
 	calculateFrameTime()
 }
 
@@ -235,3 +252,4 @@ var password string
 var fps int
 var frameTime time.Duration
 var lastScreen = ""
+var active = false

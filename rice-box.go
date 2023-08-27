@@ -12,27 +12,27 @@ func init() {
 	// define files
 	file2 := &embedded.EmbeddedFile{
 		Filename:    "index.tmpl",
-		FileModTime: time.Unix(1607284941, 0),
+		FileModTime: time.Unix(1681497946, 0),
 
-		Content: string("\r\n<html>\r\n  <head>\r\n    <link rel=\"stylesheet\" href=\"style\">\r\n    <meta charset=\"utf-8\" />\r\n    <title>goMirror</title>\r\n  </head>\r\n  <body bgcolor=\"#000000\">\r\n    <button id=\"start\">Start</button>\r\n    <button id=\"end\">Stop</button>\r\n    <input\r\n      type=\"checkbox\"\r\n      id=\"capturekey\"\r\n      name=\"capturekey\"\r\n      value=\"capturekey\"\r\n    />\r\n    <label for=\"capturekey\">Capture Keyboard</label>\r\n    <input type=\"checkbox\" id=\"queuekey\" name=\"queuekey\" value=\"queuekey\" />\r\n    <label for=\"queuekey\">Queue Keyboard</label>\r\n    <button id=\"send\">Send Queue</button>\r\n    <br />\r\n    <img src=\"\" id=\"screen\" />\r\n  </body>\r\n  <script src=\"script\"></script>\r\n</html>\r\n\r\n"),
+		Content: string("\n<html>\n  <head>\n    <link rel=\"stylesheet\" href=\"style\">\n    <meta charset=\"utf-8\" />\n    <title>goMirror</title>\n  </head>\n  <body bgcolor=\"#000000\">\n    <button id=\"start\">Start</button>\n    <button id=\"end\">Stop</button>\n    <input\n      type=\"checkbox\"\n      id=\"capturekey\"\n      name=\"capturekey\"\n      value=\"capturekey\"\n    />\n    <label for=\"capturekey\">Capture Keyboard</label>\n    <input type=\"checkbox\" id=\"queuekey\" name=\"queuekey\" value=\"queuekey\" />\n    <label for=\"queuekey\">Queue Keyboard</label>\n    <button id=\"send\">Send Queue</button>\n    <br />\n    <img src=\"\" id=\"screen\" />\n  </body>\n  <script src=\"script\"></script>\n</html>\n\n"),
 	}
 	file3 := &embedded.EmbeddedFile{
 		Filename:    "script.js",
-		FileModTime: time.Unix(1607282896, 0),
+		FileModTime: time.Unix(1693157159, 0),
 
-		Content: string("var screenSocket;\r\nvar inputSocket;\r\ndocument.getElementById(\"start\").onclick = function (evt) {\r\n  var password = prompt(\"Enter Password\");\r\n  screenSocket = new WebSocket(\"{{.screen}}\" + \"?password=\" + password);\r\n  inputSocket = new WebSocket(\"{{.input}}\" + \"?password=\" + password);\r\n  screenSocket.onmessage = function (evt) {\r\n    document.getElementById(\"screen\").src = evt.data;\r\n    return false;\r\n  };\r\n  screenSocket.onopen = function (evt) {\r\n    screenSocket.send(\"go\");\r\n    return false;\r\n  };\r\n  return false;\r\n};\r\ndocument.getElementById(\"end\").onclick = function (evt) {\r\n  screenSocket.close();\r\n  return false;\r\n};\r\ndocument.getElementById(\"send\").onclick = function (evt) {\r\n  inputSocket.send(\"K-W\");\r\n  document.getElementById(\"queuekey\").checked = false;\r\n  return false;\r\n};\r\ndocument.getElementById(\"screen\").onclick = function (evt) {\r\n  var move = false;\r\n  bounds = this.getBoundingClientRect();\r\n  var left = bounds.left;\r\n  var top = bounds.top;\r\n  var x = event.pageX - left;\r\n  var y = event.pageY - top;\r\n  var cw = this.clientWidth;\r\n  var ch = this.clientHeight;\r\n  var iw = this.naturalWidth;\r\n  var ih = this.naturalHeight;\r\n  var px = (x / cw) * iw;\r\n  var py = (y / ch) * ih;\r\n  if (px <= iw * 0.3) {\r\n    move = true;\r\n    inputSocket.send(\"M-M-L\");\r\n    if (px <= iw * 0.3) {\r\n      inputSocket.send(\"M-M-L\");\r\n    }\r\n  }\r\n  if (py <= ih * 0.3) {\r\n    move = true;\r\n    inputSocket.send(\"M-M-U\");\r\n    if (py <= ih * 0.15) {\r\n      inputSocket.send(\"M-M-U\");\r\n    }\r\n  }\r\n  if (px >= iw - 0.3 * iw) {\r\n    move = true;\r\n    inputSocket.send(\"M-M-R\");\r\n    if (px >= iw - 0.3 * iw) {\r\n      inputSocket.send(\"M-M-R\");\r\n    }\r\n  }\r\n  if (py >= ih - 0.3 * ih) {\r\n    move = true;\r\n    inputSocket.send(\"M-M-D\");\r\n    if (py >= ih - 0.3 * ih) {\r\n      inputSocket.send(\"M-M-D\");\r\n    }\r\n  }\r\n  if (!move) {\r\n    inputSocket.send(\"M-C-L\");\r\n  }\r\n};\r\ndocument.getElementById(\"screen\").oncontextmenu = function (evt) {\r\n  inputSocket.send(\"M-C-R\");\r\n};\r\ndocument.getElementById(\"queuekey\").onchange = function (evt) {\r\n  inputSocket.send(\"K-E\");\r\n};\r\nwindow.addEventListener(\r\n  \"keydown\",\r\n  function (event) {\r\n    if (event.defaultPrevented) {\r\n      return;\r\n    }\r\n    if (document.getElementById(\"capturekey\").checked) {\r\n      if (document.getElementById(\"queuekey\").checked) {\r\n        inputSocket.send(\"K-Q-\" + event.key);\r\n        event.preventDefault();\r\n        return false;\r\n      } else {\r\n        inputSocket.send(\"K-T-\" + event.key);\r\n        event.preventDefault();\r\n        return false;\r\n      }\r\n    }\r\n  },\r\n  true\r\n);\r\n"),
+		Content: string("var screenSocket;\nvar inputSocket;\ndocument.getElementById(\"start\").onclick = function (evt) {\n  var password = prompt(\"Enter Password\");\n  screenSocket = new WebSocket(\"{{.screen}}\" + \"?password=\" + password);\n  inputSocket = new WebSocket(\"{{.input}}\" + \"?password=\" + password);\n  screenSocket.onmessage = function (evt) {\n    document.getElementById(\"screen\").src = evt.data;\n    return false;\n  };\n  screenSocket.onopen = function (evt) {\n    screenSocket.send(\"go\");\n    return false;\n  };\n  return false;\n};\ndocument.getElementById(\"end\").onclick = function (evt) {\n  screenSocket.send(\"stop\");\n  screenSocket.close();\n  return false;\n};\ndocument.getElementById(\"send\").onclick = function (evt) {\n  inputSocket.send(\"K-W\");\n  document.getElementById(\"queuekey\").checked = false;\n  return false;\n};\ndocument.getElementById(\"screen\").onclick = function (evt) {\n  var move = false;\n  bounds = this.getBoundingClientRect();\n  var left = bounds.left;\n  var top = bounds.top;\n  var x = event.pageX - left;\n  var y = event.pageY - top;\n  var cw = this.clientWidth;\n  var ch = this.clientHeight;\n  var iw = this.naturalWidth;\n  var ih = this.naturalHeight;\n  var px = (x / cw) * iw;\n  var py = (y / ch) * ih;\n  if (px <= iw * 0.3) {\n    move = true;\n    inputSocket.send(\"M-M-L\");\n    if (px <= iw * 0.3) {\n      inputSocket.send(\"M-M-L\");\n    }\n  }\n  if (py <= ih * 0.3) {\n    move = true;\n    inputSocket.send(\"M-M-U\");\n    if (py <= ih * 0.15) {\n      inputSocket.send(\"M-M-U\");\n    }\n  }\n  if (px >= iw - 0.3 * iw) {\n    move = true;\n    inputSocket.send(\"M-M-R\");\n    if (px >= iw - 0.3 * iw) {\n      inputSocket.send(\"M-M-R\");\n    }\n  }\n  if (py >= ih - 0.3 * ih) {\n    move = true;\n    inputSocket.send(\"M-M-D\");\n    if (py >= ih - 0.3 * ih) {\n      inputSocket.send(\"M-M-D\");\n    }\n  }\n  if (!move) {\n    inputSocket.send(\"M-C-L\");\n  }\n};\ndocument.getElementById(\"screen\").oncontextmenu = function (evt) {\n  inputSocket.send(\"M-C-R\");\n};\ndocument.getElementById(\"queuekey\").onchange = function (evt) {\n  inputSocket.send(\"K-E\");\n};\nwindow.addEventListener(\n  \"keydown\",\n  function (event) {\n    if (event.defaultPrevented) {\n      return;\n    }\n    if (document.getElementById(\"capturekey\").checked) {\n      if (document.getElementById(\"queuekey\").checked) {\n        inputSocket.send(\"K-Q-\" + event.key);\n        event.preventDefault();\n        return false;\n      } else {\n        inputSocket.send(\"K-T-\" + event.key);\n        event.preventDefault();\n        return false;\n      }\n    }\n  },\n  true\n);\nwindow.addEventListener(\"beforeunload\", function(e){\n  screenSocket.send(\"stop\");\n  screenSocket.close();\n});\n"),
 	}
 	file4 := &embedded.EmbeddedFile{
 		Filename:    "style.css",
-		FileModTime: time.Unix(1607284322, 0),
+		FileModTime: time.Unix(1681497946, 0),
 
-		Content: string("label {\r\n    color: white;\r\n}\r\n\r\n#screen {\r\n    touch-action: manipulation;\r\n    transition-timing-function: linear;\r\n}"),
+		Content: string("label {\n    color: white;\n}\n\n#screen {\n    touch-action: manipulation;\n    transition-timing-function: linear;\n}"),
 	}
 
 	// define dirs
 	dir1 := &embedded.EmbeddedDir{
 		Filename:   "",
-		DirModTime: time.Unix(1607287563, 0),
+		DirModTime: time.Unix(1693159680, 0),
 		ChildFiles: []*embedded.EmbeddedFile{
 			file2, // "index.tmpl"
 			file3, // "script.js"
@@ -47,7 +47,7 @@ func init() {
 	// register embeddedBox
 	embedded.RegisterEmbeddedBox(`frontend`, &embedded.EmbeddedBox{
 		Name: `frontend`,
-		Time: time.Unix(1607287563, 0),
+		Time: time.Unix(1693159680, 0),
 		Dirs: map[string]*embedded.EmbeddedDir{
 			"": dir1,
 		},
