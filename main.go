@@ -42,6 +42,9 @@ func main() {
 			fmt.Println("IPv4: ", ipv4)
 		}
 	}
+	if len(os.Args) >= 2 {
+		password = os.Args[1]
+	}
 	fmt.Println("Password: " + password)
 	var err error
 	if len(os.Args) > 1 {
