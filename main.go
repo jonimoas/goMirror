@@ -27,7 +27,6 @@ import (
 )
 
 func main() {
-	flag.Parse()
 	log.SetFlags(0)
 	http.HandleFunc("/screen", screen)
 	http.HandleFunc("/input", input)
@@ -42,22 +41,22 @@ func main() {
 			fmt.Println("IPv4: ", ipv4)
 		}
 	}
-	if len(os.Args) >= 2 {
-		password = os.Args[1]
+	password = "Generated"
+        passwordPtr := flag.String("pass", password, "the desired password, will generate one by default")
+        fpsPtr := flag.Int("fps", 60, "the framerate at which the app will start")
+	portPtr := flag.Int("port", 80, "the port that te app will be hosted on")
+	flag.Parse()
+	password = *passwordPtr
+	fps = *fpsPtr
+	port := *portPtr
+	if strings.Compare(password, "Generated") == 0 {
+		password = randSeq(6)
 	}
 	fmt.Println("Password: " + password)
-	var err error
-	if len(os.Args) > 1 {
-		fps, err = strconv.Atoi(os.Args[1])
-		if err != nil {
-			fps = 60
-		}
-	} else {
-		fps = 60
-	}
-	maxfps = fps
+	fmt.Println("StartingFPS: " + strconv.Itoa(fps))
+	fmt.Println("Port: " + strconv.Itoa(port))
 	calculateFrameTime()
-	log.Fatal(http.ListenAndServe(":80", nil))
+	log.Fatal(http.ListenAndServe(":" + strconv.Itoa(port), nil))
 }
 
 func makeImage() {
@@ -232,8 +231,7 @@ var scriptTemplate, errS = ttemplate.New("script").Parse(js)
 var styleTemplate, errC = ttemplate.New("style").Parse(css)
 var upgrader = websocket.Upgrader{}
 var keyBuffer []string
-var password = randSeq(6)
+var password string
 var fps int
-var maxfps int
 var frameTime time.Duration
 var lastScreen = ""

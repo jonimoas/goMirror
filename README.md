@@ -1,7 +1,7 @@
 # goMirror
 
 Small app written in go, which streams the screen of the current system on 
-a web page in port 80.
+a web page.
 
 Mouse usage is also possible, click on the edges of the screen to move the mouse
 and on the center to perform a left click, or a right click! (works with long press on mobile)
@@ -16,6 +16,15 @@ Just run, access the system's IP address through a browser, click start and ente
 that is displayed on the console window of the host computer!
 
 FPS is calculated in real time to avoid overloading the CPU
+
+Usage of ./goMirror:
+  -fps int
+        the framerate at which the app will start (default 60)
+  -pass string
+        the desired password, will generate one by default (default "Generated")
+  -port int
+        the port that te app will be hosted on (default 80)
+
 
 NOTE: if you want to rebuild the frontend, you need to use rice and the rice embed-go command.
 
