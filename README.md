@@ -18,11 +18,17 @@ that is displayed on the console window of the host computer!
 FPS is calculated in real time to avoid overloading the CPU
 
 Usage of ./goMirror:
+
   -fps int
+
         the framerate at which the app will start (default 60)
+
   -pass string
+
         the desired password, will generate one by default (default "Generated")
+
   -port int
+
         the port that te app will be hosted on (default 80)
 
 
