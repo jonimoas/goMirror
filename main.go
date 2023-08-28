@@ -64,6 +64,7 @@ func main() {
 
 func makeImage() {
 	for {
+		time.Sleep(frameTime)
 		if active {
 			imageStart := time.Now()
 			all := screenshot.GetDisplayBounds(0).Union(image.Rect(0, 0, 0, 0))
