@@ -6,6 +6,7 @@
     <title>goMirror</title>
   </head>
   <body bgcolor="#000000">
+    <div>
     <button id="start">Start</button>
     <button id="end">Stop</button>
     <input
@@ -19,7 +20,10 @@
     <label for="queuekey">Queue Keyboard</label>
     <button id="send">Send Queue</button>
     <br />
-    <img src="" id="screen" />
+    </div>
+    <div style="position:fixed; height: 100%; width: 100%; top:40;left 0;">
+      <img src="" id="screen" style="height: 100%; width:100%; object-fit: scale-down;"/>
+    </div>
   </body>
   <script src="script"></script>
 </html>

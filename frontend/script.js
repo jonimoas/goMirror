@@ -47,7 +47,7 @@ document.getElementById("screen").onclick = function (evt) {
   if (px <= iw * 0.3) {
     move = true;
     inputSocket.send("M-M-L");
-    if (px <= iw * 0.3) {
+    if (px <= iw * 0.15) {
       inputSocket.send("M-M-L");
     }
   }
@@ -61,14 +61,14 @@ document.getElementById("screen").onclick = function (evt) {
   if (px >= iw - 0.3 * iw) {
     move = true;
     inputSocket.send("M-M-R");
-    if (px >= iw - 0.3 * iw) {
+    if (px >= iw - 0.15 * iw) {
       inputSocket.send("M-M-R");
     }
   }
   if (py >= ih - 0.3 * ih) {
     move = true;
     inputSocket.send("M-M-D");
-    if (py >= ih - 0.3 * ih) {
+    if (py >= ih - 0.15 * ih) {
       inputSocket.send("M-M-D");
     }
   }
