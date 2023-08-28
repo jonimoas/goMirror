@@ -1,10 +1,9 @@
 var screenSocket;
-var inputSocket;
+var screenSocket;
 document.getElementById("start").onclick = function (evt) {
   var password = prompt("Enter Password");
   try{
     screenSocket = new WebSocket("{{.screen}}" + "?password=" + password);
-    inputSocket = new WebSocket("{{.input}}" + "?password=" + password);
     screenSocket.onmessage = function (evt) {
       document.getElementById("screen").src = evt.data;
       return false;
@@ -24,11 +23,10 @@ document.getElementById("start").onclick = function (evt) {
 document.getElementById("end").onclick = function (evt) {
   screenSocket.send("stop");
   screenSocket.close();
-  inputSocket.close();
   return false;
 };
 document.getElementById("send").onclick = function (evt) {
-  inputSocket.send("K-W");
+  screenSocket.send("K-W");
   document.getElementById("queuekey").checked = false;
   return false;
 };
@@ -48,47 +46,47 @@ document.getElementById("screen").onclick = function (evt) {
     var py = (y / ch) * ih;
     if (px <= iw * 0.3) {
       move = true;
-      inputSocket.send("M-M-L");
+      screenSocket.send("M-M-L");
       if (px <= iw * 0.15) {
-        inputSocket.send("M-M-L");
+        screenSocket.send("M-M-L");
       }
     }
     if (py <= ih * 0.3) {
       move = true;
-      inputSocket.send("M-M-U");
+      screenSocket.send("M-M-U");
       if (py <= ih * 0.15) {
-        inputSocket.send("M-M-U");
+        screenSocket.send("M-M-U");
       }
     }
     if (px >= iw - 0.3 * iw) {
       move = true;
-      inputSocket.send("M-M-R");
+      screenSocket.send("M-M-R");
       if (px >= iw - 0.15 * iw) {
-        inputSocket.send("M-M-R");
+        screenSocket.send("M-M-R");
       }
     }
     if (py >= ih - 0.3 * ih) {
       move = true;
-      inputSocket.send("M-M-D");
+      screenSocket.send("M-M-D");
       if (py >= ih - 0.15 * ih) {
-        inputSocket.send("M-M-D");
+        screenSocket.send("M-M-D");
       }
     }
     if (!move) {
-      inputSocket.send("M-C-L");
+      screenSocket.send("M-C-L");
     }
   } else {
     x = evt.offsetX;
     y = evt.offsetY;
-    inputSocket.send("M-A-" + x + "-" + y);
-    inputSocket.send("M-C-L");
+    screenSocket.send("M-A-" + x + "-" + y);
+    screenSocket.send("M-C-L");
   }
 };
 document.getElementById("screen").oncontextmenu = function (evt) {
-  inputSocket.send("M-C-R");
+  screenSocket.send("M-C-R");
 };
 document.getElementById("queuekey").onchange = function (evt) {
-  inputSocket.send("K-E");
+  screenSocket.send("K-E");
 };
 document.getElementById("mobilemode").onchange = function (evt) {
   if (document.getElementById("mobilemode").checked) {
@@ -116,11 +114,11 @@ window.addEventListener(
     }
     if (document.getElementById("capturekey").checked) {
       if (document.getElementById("queuekey").checked) {
-        inputSocket.send("K-Q-" + event.key);
+        screenSocket.send("K-Q-" + event.key);
         event.preventDefault();
         return false;
       } else {
-        inputSocket.send("K-T-" + event.key);
+        screenSocket.send("K-T-" + event.key);
         event.preventDefault();
         return false;
       }
