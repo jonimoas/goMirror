@@ -26,10 +26,9 @@ import (
 	"github.com/kbinani/screenshot"
 )
 
+
 func main() {
 	log.SetFlags(0)
-	http.HandleFunc("/screen", screen)
-	http.HandleFunc("/input", input)
 	http.HandleFunc("/script", script)
 	http.HandleFunc("/style", style)
 	http.HandleFunc("/", home)
@@ -45,40 +44,46 @@ func main() {
         passwordPtr := flag.String("pass", password, "the desired password, will generate one by default")
         fpsPtr := flag.Int("fps", 60, "the framerate at which the app will start")
 	portPtr := flag.Int("port", 80, "the port that te app will be hosted on")
+	sessionsPtr := flag.Int("sessions", 5, "the maximum number of websocket endpoints to be created")
 	flag.Parse()
 	password = *passwordPtr
 	fps = *fpsPtr
 	port := *portPtr
+	sessions = *sessionsPtr
 	if strings.Compare(password, "Generated") == 0 {
 		password = randSeq(6)
 	}
 	fmt.Println("Password: " + password)
 	fmt.Println("StartingFPS: " + strconv.Itoa(fps))
 	fmt.Println("Port: " + strconv.Itoa(port))
+	fmt.Println("Sessions: " + strconv.Itoa(sessions))
 	calculateFrameTime()
+	go makeImage()
 	log.Fatal(http.ListenAndServe(":" + strconv.Itoa(port), nil))
 }
 
 func makeImage() {
-	if active == true {
-		imageStart := time.Now()
-		all := screenshot.GetDisplayBounds(0).Union(image.Rect(0, 0, 0, 0))
-		img, err := screenshot.Capture(all.Min.X, all.Min.Y, all.Dx(), all.Dy())
-		if err != nil {
-			fmt.Println("Screenshot: ", err)
+	for {
+		if active {
+			imageStart := time.Now()
+			all := screenshot.GetDisplayBounds(0).Union(image.Rect(0, 0, 0, 0))
+			img, err := screenshot.Capture(all.Min.X, all.Min.Y, all.Dx(), all.Dy())
+			if err != nil {
+				fmt.Println("Screenshot: ", err)
+			}
+			x, y := robotgo.GetMousePos()
+			c := color.White
+			r, g, b, a := img.At(x, y).RGBA()
+			_ = a
+			if r > 40000 && g > 40000 && b > 40000 {
+				c = color.Black
+			}
+			draw.Draw(img, image.Rect(x-5, y-5, x+5, y+5), &image.Uniform{c}, image.ZP, draw.Src)
+			var buff bytes.Buffer
+			jpeg.Encode(&buff, img, &jpeg.Options{Quality: 50})
+			lastScreen = "data:image/jpeg;base64," + base64.StdEncoding.EncodeToString(buff.Bytes())
+			checkReduceFPS(imageStart)
 		}
-		x, y := robotgo.GetMousePos()
-		c := color.White
-		r, g, b, a := img.At(x, y).RGBA()
-		_ = a
-		if r > 40000 && g > 40000 && b > 40000 {
-			c = color.Black
-		}
-		draw.Draw(img, image.Rect(x-5, y-5, x+5, y+5), &image.Uniform{c}, image.ZP, draw.Src)
-		var buff bytes.Buffer
-		jpeg.Encode(&buff, img, &jpeg.Options{Quality: 50})
-		lastScreen = "data:image/jpeg;base64," + base64.StdEncoding.EncodeToString(buff.Bytes())
-		checkReduceFPS(imageStart)
 	}
 }
 
@@ -157,6 +162,9 @@ func screen(w http.ResponseWriter, r *http.Request) {
 	if !authenticate(w, r) {
 		return
 	}
+	if checkSocketActive(w,r) {
+		return
+	}
 	c, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		fmt.Print("upgrade:", err)
@@ -166,46 +174,55 @@ func screen(w http.ResponseWriter, r *http.Request) {
 		mt, message, err := c.ReadMessage()
 		if err != nil {
 			fmt.Println("read:", err)
-			active = false
+			deactivateSocket(strings.Split(r.URL.Path, "_")[1])
+			determineGlobalActivity()
 			break
 		}
 		if string(message) == "go" {
-			active = true
-			go socketActivity(c, mt)
+			activateSocket(strings.Split(r.URL.Path, "_")[1])
+			determineGlobalActivity()
+			go socketActivity(c, mt, strings.Split(r.URL.Path, "_")[1])
 		}
 		if string(message) == "stop" {
 			c.Close()
-			active = false
+			deactivateSocket(strings.Split(r.URL.Path, "_")[1])
+			determineGlobalActivity()
+			break
 		}
-
 	}
 }
 
-func socketActivity(c *websocket.Conn, mt int) {
+func socketActivity(c *websocket.Conn, mt int, id string) {
 	for {
-		go makeImage()
 		time.Sleep(frameTime)
 		if lastScreen != "" {
 			err := c.WriteMessage(mt, []byte(lastScreen))
 			if err != nil {
 				fmt.Println("write:", err)
-				active = false
+				deactivateSocket(id)
+				determineGlobalActivity()
 				break
 			}
 		}
-		if active == false {
+		if !active {
 			break
 		}
 	}
 }
 func home(w http.ResponseWriter, r *http.Request) {
-	homeTemplate.Execute(w, nil)
+	if checkAvailableSockets() {
+		fmt.Println("no more sessions!")
+		w.WriteHeader(503)
+	} else {
+		homeTemplate.Execute(w, nil)
+	}
 }
 
 func script(w http.ResponseWriter, r *http.Request) {
+	socket := strconv.Itoa(determineSocket())
 	sockets := map[string]interface{}{
-		"screen": "ws://" + r.Host + "/screen",
-		"input":  "ws://" + r.Host + "/input",
+		"screen": "ws://" + r.Host + "/screen_" + socket,
+		"input":  "ws://" + r.Host + "/input_" + socket,
 	}
 	scriptTemplate.Execute(w, sockets)
 }
@@ -238,6 +255,72 @@ func checkReduceFPS(start time.Time) {
 	calculateFrameTime()
 }
 
+func determineSocket () int {
+	for i := range sockets {
+		if !sockets[i] {
+			fmt.Println("assign socket: " + strconv.Itoa(i))
+			return i
+		}
+	}
+	sockets = append(sockets, false)
+	fmt.Println("create and assign socket: " +  strconv.Itoa(len(sockets) - 1))
+	http.HandleFunc("/screen_" + strconv.Itoa(len(sockets) - 1), screen)
+	http.HandleFunc("/input_" +  strconv.Itoa(len(sockets) - 1), input)
+	return len(sockets) - 1
+}
+
+func activateSocket (id string) {
+	fmt.Println("activate socket: " + id)
+	intId, err := strconv.Atoi(id)
+	if err == nil {
+		sockets[intId] = true
+	}
+}
+
+func deactivateSocket (id string) {
+	fmt.Println("deactivate socket: " + id)
+	intId, err := strconv.Atoi(id)
+	if err == nil {
+		sockets[intId] = false
+	}
+}
+
+func checkSocketActive (w http.ResponseWriter, r *http.Request) bool {
+	id, err := strconv.Atoi(strings.Split(r.URL.Path, "_")[1])
+	if err == nil && len(sockets) > id {
+		if sockets[id] {
+			fmt.Println("socket already active: " + strconv.Itoa(id))
+			w.WriteHeader(503)
+			return true
+		}
+	}
+	return false
+}
+
+func checkAvailableSockets () bool {
+	activeSockets := 0
+	for i := range sockets {
+		if sockets[i] {
+			activeSockets++
+		}
+		i++
+	}
+	return activeSockets == sessions
+}
+
+
+func determineGlobalActivity () {
+	for i := range sockets {
+		if sockets[i] {
+			active = true
+			fmt.Println("activate render")
+			return
+		}
+	}
+	fmt.Println("deactivate render")
+	active = false
+}
+
 var box = rice.MustFindBox("frontend")
 var tmpl, errTMPL = box.String("index.tmpl")
 var css, errCSS = box.String("style.css")
@@ -250,6 +333,8 @@ var upgrader = websocket.Upgrader{}
 var keyBuffer []string
 var password string
 var fps int
+var sessions int
 var frameTime time.Duration
 var lastScreen = ""
 var active = false
+var sockets []bool

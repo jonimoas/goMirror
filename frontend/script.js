@@ -2,17 +2,24 @@ var screenSocket;
 var inputSocket;
 document.getElementById("start").onclick = function (evt) {
   var password = prompt("Enter Password");
-  screenSocket = new WebSocket("{{.screen}}" + "?password=" + password);
-  inputSocket = new WebSocket("{{.input}}" + "?password=" + password);
-  screenSocket.onmessage = function (evt) {
-    document.getElementById("screen").src = evt.data;
+  try{
+    screenSocket = new WebSocket("{{.screen}}" + "?password=" + password);
+    inputSocket = new WebSocket("{{.input}}" + "?password=" + password);
+    screenSocket.onmessage = function (evt) {
+      document.getElementById("screen").src = evt.data;
+      return false;
+    };
+    screenSocket.onopen = function (evt) {
+      screenSocket.send("go");
+      return false;
+    };
+    screenSocket.onerror = function (evt) {
+      location.reload();
+    };
     return false;
-  };
-  screenSocket.onopen = function (evt) {
-    screenSocket.send("go");
-    return false;
-  };
-  return false;
+  } catch(e) {
+    location.reload();
+  }
 };
 document.getElementById("end").onclick = function (evt) {
   screenSocket.send("stop");

@@ -31,6 +31,11 @@ Usage of ./goMirror:
 
         the port that te app will be hosted on (default 80)
 
+  -sessions int
+
+        the maximum number of websocket endpoints to be created (default 5)
+
+
 
 NOTE: if you want to rebuild the frontend, you need to use rice and the rice embed-go command.
 
