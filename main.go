@@ -325,6 +325,9 @@ func determineGlobalActivity () {
 			fmt.Println("activate render")
 			return
 		}
+		if sockets[i] {
+			return
+		}
 	}
 	fmt.Println("deactivate render")
 	active = false
