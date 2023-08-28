@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"flag"
 	"fmt"
@@ -19,14 +20,12 @@ import (
 	"strings"
 	ttemplate "text/template"
 	"time"
-	"context"
 
 	rice "github.com/GeertJohan/go.rice"
 	"github.com/go-vgo/robotgo"
 	"github.com/gorilla/websocket"
 	"github.com/kbinani/screenshot"
 )
-
 
 func main() {
 	log.SetFlags(0)
@@ -39,8 +38,8 @@ func main() {
 		}
 	}
 	password = "Generated"
-        passwordPtr := flag.String("pass", password, "the desired password, will generate one by default")
-        fpsPtr := flag.Int("fps", 60, "the framerate at which the app will start")
+	passwordPtr := flag.String("pass", password, "the desired password, will generate one by default")
+	fpsPtr := flag.Int("fps", 60, "the framerate at which the app will start")
 	portPtr := flag.Int("port", 80, "the port that te app will be hosted on")
 	sessionsPtr := flag.Int("sessions", 5, "the maximum number of websocket endpoints to be created")
 	flag.Parse()
@@ -72,7 +71,7 @@ func showStatus() {
 		}
 		fmt.Printf("\r")
 		fmt.Printf("                                                                       ")
-		fmt.Printf("FPS: " + strconv.Itoa(fps) + ", sockets: " + strconv.Itoa(activeSockets) + "/" + strconv.Itoa(len(sockets)) + "/" + strconv.Itoa(sessions) + ", renderer: " + strconv.FormatBool(active) )
+		fmt.Printf("FPS: " + strconv.Itoa(fps) + ", sockets: " + strconv.Itoa(activeSockets) + "/" + strconv.Itoa(len(sockets)) + "/" + strconv.Itoa(sessions) + ", renderer: " + strconv.FormatBool(active))
 		fmt.Printf("\r")
 	}
 }
@@ -104,7 +103,6 @@ func setupServer() {
 
 func makeImage() {
 	for {
-		time.Sleep(frameTime)
 		if !active {
 			return
 		}
@@ -126,6 +124,7 @@ func makeImage() {
 		jpeg.Encode(&buff, img, &jpeg.Options{Quality: 50})
 		lastScreen = "data:image/jpeg;base64," + base64.StdEncoding.EncodeToString(buff.Bytes())
 		checkReduceFPS(imageStart)
+		time.Sleep(frameTime)
 	}
 }
 
@@ -138,7 +137,6 @@ func authenticate(w http.ResponseWriter, r *http.Request) bool {
 	}
 	return true
 }
-
 
 func screen(w http.ResponseWriter, r *http.Request) {
 	if !authenticate(w, r) {
@@ -226,7 +224,8 @@ func screen(w http.ResponseWriter, r *http.Request) {
 
 func socketActivity(c *websocket.Conn, mt int, id string) {
 	for {
-		if lastScreen != "" {
+		time.Sleep(frameTime)
+		if len(lastScreen) > 0 {
 			err := c.WriteMessage(mt, []byte(lastScreen))
 			if err != nil {
 				determineGlobalActivity()
@@ -287,7 +286,7 @@ func checkReduceFPS(start time.Time) {
 	calculateFrameTime()
 }
 
-func determineSocket () int {
+func determineSocket() int {
 	for i := range sockets {
 		if !sockets[i] {
 			fmt.Println("assign socket: " + strconv.Itoa(i))
@@ -295,12 +294,12 @@ func determineSocket () int {
 		}
 	}
 	sockets = append(sockets, false)
-	fmt.Println("create and assign socket: " +  strconv.Itoa(len(sockets) - 1))
-	m.HandleFunc("/screen_" + strconv.Itoa(len(sockets) - 1), screen)
+	fmt.Println("create and assign socket: " + strconv.Itoa(len(sockets)-1))
+	m.HandleFunc("/screen_"+strconv.Itoa(len(sockets)-1), screen)
 	return len(sockets) - 1
 }
 
-func activateSocket (id string) {
+func activateSocket(id string) {
 	fmt.Println("activate socket: " + id)
 	intId, err := strconv.Atoi(id)
 	if err == nil {
@@ -308,7 +307,7 @@ func activateSocket (id string) {
 	}
 }
 
-func deactivateSocket (id string) {
+func deactivateSocket(id string) {
 	fmt.Println("deactivate socket: " + id)
 	intId, err := strconv.Atoi(id)
 	if err == nil {
@@ -316,7 +315,7 @@ func deactivateSocket (id string) {
 	}
 }
 
-func checkSocketActive (w http.ResponseWriter, r *http.Request, writeHeader bool) bool {
+func checkSocketActive(w http.ResponseWriter, r *http.Request, writeHeader bool) bool {
 	id, err := strconv.Atoi(strings.Split(r.URL.Path, "_")[1])
 	if err == nil && len(sockets) > id {
 		if sockets[id] {
@@ -330,7 +329,7 @@ func checkSocketActive (w http.ResponseWriter, r *http.Request, writeHeader bool
 	return false
 }
 
-func checkAvailableSockets () bool {
+func checkAvailableSockets() bool {
 	activeSockets := 0
 	for i := range sockets {
 		if sockets[i] {
@@ -341,10 +340,9 @@ func checkAvailableSockets () bool {
 	return activeSockets == sessions
 }
 
-
-func determineGlobalActivity () {
+func determineGlobalActivity() {
 	for i := range sockets {
-		if sockets[i] && !active{
+		if sockets[i] && !active {
 			active = true
 			go makeImage()
 			fmt.Println("activate render")
@@ -377,7 +375,7 @@ var fps int
 var port int
 var sessions int
 var frameTime time.Duration
-var lastScreen = ""
+var lastScreen string
 var active = false
 var m *http.ServeMux
 var s http.Server
