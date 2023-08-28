@@ -189,9 +189,9 @@ func screen(w http.ResponseWriter, r *http.Request) {
 			case "C":
 				switch string(string(message)[4]) {
 				case "L":
-					robotgo.MouseClick("left", false)
+					robotgo.Click("left", false)
 				case "R":
-					robotgo.MouseClick("right", false)
+					robotgo.Click("right", false)
 				}
 			case "A":
 				x, errX := strconv.Atoi(strings.Split(string(message), "-")[2])
