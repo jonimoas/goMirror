@@ -42,7 +42,7 @@ func main() {
 	fpsPtr := flag.Int("fps", 60, "the framerate at which the app will start")
 	portPtr := flag.Int("port", 80, "the port that te app will be hosted on")
 	sessionsPtr := flag.Int("sessions", 5, "the maximum number of websocket endpoints to be created")
-	speedPtr := flag.Bool("maxspeed", false, "if enabled, no threads sleep. Might make app and system unstable :)")
+	speedPtr := flag.Bool("maxspeed", false, "if enabled, no threads sleep and endpoints are not cleaned up. Might make app and system unstable. :)")
 	flag.Parse()
 	password = *passwordPtr
 	fps = *fpsPtr
@@ -363,10 +363,13 @@ func determineGlobalActivity() {
 		}
 	}
 	if active {
-		fmt.Println("deactivate render and cleanup endpoints")
+		fmt.Println("deactivate render")
 		active = false
-		s.Shutdown(context.Background())
-		server = false
+		if !speed {
+			fmt.Println("cleanup endpoints")
+			s.Shutdown(context.Background())
+			server = false
+		}
 	}
 }
 
