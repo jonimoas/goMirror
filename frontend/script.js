@@ -24,6 +24,7 @@ document.getElementById("start").onclick = function (evt) {
 document.getElementById("end").onclick = function (evt) {
   screenSocket.send("stop");
   screenSocket.close();
+  inputSocket.close();
   return false;
 };
 document.getElementById("send").onclick = function (evt) {
