@@ -36,6 +36,11 @@ Usage of ./goMirror:
 
         the maximum number of websocket endpoints to be created (default 5)
 
+  -maxspeed
+
+        if enabled, no threads sleep. Might make app and system unstable :)
+
+
 
 
 NOTE: if you want to rebuild the frontend, you need to use rice and the rice embed-go command.

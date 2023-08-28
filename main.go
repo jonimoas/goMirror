@@ -42,11 +42,13 @@ func main() {
 	fpsPtr := flag.Int("fps", 60, "the framerate at which the app will start")
 	portPtr := flag.Int("port", 80, "the port that te app will be hosted on")
 	sessionsPtr := flag.Int("sessions", 5, "the maximum number of websocket endpoints to be created")
+	speedPtr := flag.Bool("maxspeed", false, "if enabled, no threads sleep. Might make app and system unstable :)")
 	flag.Parse()
 	password = *passwordPtr
 	fps = *fpsPtr
 	port = *portPtr
 	sessions = *sessionsPtr
+	speed = *speedPtr
 	if strings.Compare(password, "Generated") == 0 {
 		password = randSeq(6)
 	}
@@ -55,7 +57,11 @@ func main() {
 	fmt.Println("Port: " + strconv.Itoa(port))
 	fmt.Println("Sessions: " + strconv.Itoa(sessions))
 	calculateFrameTime()
-	go showStatus()
+	if (speed) {
+		fmt.Println("RUNNING AT MAX SPEED")
+	} else {
+		go showStatus()
+	}
 	maintainServer()
 }
 
@@ -278,6 +284,10 @@ func calculateFrameTime() {
 }
 
 func checkReduceFPS(start time.Time) {
+	if speed {
+		frameTime = 0
+		return
+	}
 	if time.Now().UnixMilli()-start.UnixMilli() > frameTime.Milliseconds() {
 		fps = fps / 2
 	} else {
@@ -380,4 +390,5 @@ var active = false
 var m *http.ServeMux
 var s http.Server
 var sockets []bool
+var speed bool
 var server = false
