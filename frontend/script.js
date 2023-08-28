@@ -32,47 +32,54 @@ document.getElementById("send").onclick = function (evt) {
   return false;
 };
 document.getElementById("screen").onclick = function (evt) {
-  var move = false;
-  bounds = this.getBoundingClientRect();
-  var left = bounds.left;
-  var top = bounds.top;
-  var x = event.pageX - left;
-  var y = event.pageY - top;
-  var cw = this.clientWidth;
-  var ch = this.clientHeight;
-  var iw = this.naturalWidth;
-  var ih = this.naturalHeight;
-  var px = (x / cw) * iw;
-  var py = (y / ch) * ih;
-  if (px <= iw * 0.3) {
-    move = true;
-    inputSocket.send("M-M-L");
-    if (px <= iw * 0.15) {
+  if (document.getElementById("mobilemode").checked) {
+    var move = false;
+    bounds = this.getBoundingClientRect();
+    var left = bounds.left;
+    var top = bounds.top;
+    var x = event.pageX - left;
+    var y = event.pageY - top;
+    var cw = this.clientWidth;
+    var ch = this.clientHeight;
+    var iw = this.naturalWidth;
+    var ih = this.naturalHeight;
+    var px = (x / cw) * iw;
+    var py = (y / ch) * ih;
+    if (px <= iw * 0.3) {
+      move = true;
       inputSocket.send("M-M-L");
+      if (px <= iw * 0.15) {
+        inputSocket.send("M-M-L");
+      }
     }
-  }
-  if (py <= ih * 0.3) {
-    move = true;
-    inputSocket.send("M-M-U");
-    if (py <= ih * 0.15) {
+    if (py <= ih * 0.3) {
+      move = true;
       inputSocket.send("M-M-U");
+      if (py <= ih * 0.15) {
+        inputSocket.send("M-M-U");
+      }
     }
-  }
-  if (px >= iw - 0.3 * iw) {
-    move = true;
-    inputSocket.send("M-M-R");
-    if (px >= iw - 0.15 * iw) {
+    if (px >= iw - 0.3 * iw) {
+      move = true;
       inputSocket.send("M-M-R");
+      if (px >= iw - 0.15 * iw) {
+        inputSocket.send("M-M-R");
+      }
     }
-  }
-  if (py >= ih - 0.3 * ih) {
-    move = true;
-    inputSocket.send("M-M-D");
-    if (py >= ih - 0.15 * ih) {
+    if (py >= ih - 0.3 * ih) {
+      move = true;
       inputSocket.send("M-M-D");
+      if (py >= ih - 0.15 * ih) {
+        inputSocket.send("M-M-D");
+      }
     }
-  }
-  if (!move) {
+    if (!move) {
+      inputSocket.send("M-C-L");
+    }
+  } else {
+    x = evt.offsetX;
+    y = evt.offsetY;
+    inputSocket.send("M-A-" + x + "-" + y);
     inputSocket.send("M-C-L");
   }
 };
@@ -81,6 +88,24 @@ document.getElementById("screen").oncontextmenu = function (evt) {
 };
 document.getElementById("queuekey").onchange = function (evt) {
   inputSocket.send("K-E");
+};
+document.getElementById("mobilemode").onchange = function (evt) {
+  if (document.getElementById("mobilemode").checked) {
+    document.getElementById("screencontainer").style.position = "fixed";
+    document.getElementById("screencontainer").style.height = "100%";
+    document.getElementById("screencontainer").style.width = "100%";
+    document.getElementById("screen").style.height = "100%";
+    document.getElementById("screen").style.width = "100%";
+    document.getElementById("screen").style["object-fit"] = "scale-down";
+  } else {
+    document.getElementById("screencontainer").style.position = "";
+    document.getElementById("screencontainer").style.height = "";
+    document.getElementById("screencontainer").style.width = "";
+    document.getElementById("screen").style.height = "";
+    document.getElementById("screen").style.width = "";
+    document.getElementById("screen").style["object-fit"] = "";
+  }
+
 };
 window.addEventListener(
   "keydown",

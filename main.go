@@ -135,6 +135,12 @@ func input(w http.ResponseWriter, r *http.Request) {
 				case "R":
 					robotgo.MouseClick("right", false)
 				}
+			case "A":
+				x, errX := strconv.Atoi(strings.Split(string(message), "-")[2])
+				y, errY := strconv.Atoi(strings.Split(string(message), "-")[3])
+				if errX == nil && errY == nil {
+					robotgo.Move(x, y)
+				}
 			}
 		case "K":
 			keyCode := ""

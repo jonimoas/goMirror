@@ -3,8 +3,9 @@
 Small app written in go, which streams the screen of the current system on 
 a web page.
 
-Mouse usage is also possible, click on the edges of the screen to move the mouse
-and on the center to perform a left click, or a right click! (works with long press on mobile)
+Mouse usage possible, either by clicking on the edges of the screen to move the mouse
+and on the center to perform a left click, or a right click! (works with long press on mobile, if movile mode is on),
+or by simply clicking on the desired point of the screen (if mobile mode is off)
 
 If you click on the capture keyboard checkbox, you can send single keystrokes to the 
 remote machine!
