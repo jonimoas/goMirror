@@ -40,15 +40,17 @@ func main() {
 	password = "Generated"
 	passwordPtr := flag.String("pass", password, "the desired password, will generate one by default")
 	fpsPtr := flag.Int("fps", 60, "the framerate at which the app will start")
-	portPtr := flag.Int("port", 80, "the port that te app will be hosted on")
+	portPtr := flag.Int("port", 80, "the port that the app will be hosted on")
 	sessionsPtr := flag.Int("sessions", 5, "the maximum number of websocket endpoints to be created")
 	speedPtr := flag.Bool("maxspeed", false, "if enabled, no threads sleep and endpoints are not cleaned up. Might make app and system unstable. :)")
+	compressionPtr := flag.Int("compression", 50, "the amount of compression that will be applied on the images")
 	flag.Parse()
 	password = *passwordPtr
 	fps = *fpsPtr
 	port = *portPtr
 	sessions = *sessionsPtr
 	speed = *speedPtr
+	compression = *compressionPtr
 	if strings.Compare(password, "Generated") == 0 {
 		password = randSeq(6)
 	}
@@ -56,6 +58,7 @@ func main() {
 	fmt.Println("StartingFPS: " + strconv.Itoa(fps))
 	fmt.Println("Port: " + strconv.Itoa(port))
 	fmt.Println("Sessions: " + strconv.Itoa(sessions))
+	fmt.Println("Compression: " + strconv.Itoa(compression))
 	calculateFrameTime()
 	if (speed) {
 		fmt.Println("RUNNING AT MAX SPEED")
@@ -94,6 +97,7 @@ func maintainServer() {
 func setupServer() {
 	fmt.Println("Server CleanUp")
 	sockets = nil
+	mobileSockets = nil
 	m = http.NewServeMux()
 	m.HandleFunc("/script", script)
 	m.HandleFunc("/style", style)
@@ -118,16 +122,18 @@ func makeImage() {
 		if err != nil {
 			fmt.Println("Screenshot: ", err)
 		}
-		x, y := robotgo.GetMousePos()
-		c := color.White
-		r, g, b, a := img.At(x, y).RGBA()
-		_ = a
-		if r > 40000 && g > 40000 && b > 40000 {
-			c = color.Black
+		if mobileMode {
+			x, y := robotgo.Location()
+			c := color.White
+			r, g, b, a := img.At(x, y).RGBA()
+			_ = a
+			if r > 40000 && g > 40000 && b > 40000 {
+				c = color.Black
+			}
+			draw.Draw(img, image.Rect(x-5, y-5, x+5, y+5), &image.Uniform{c}, image.ZP, draw.Src)
 		}
-		draw.Draw(img, image.Rect(x-5, y-5, x+5, y+5), &image.Uniform{c}, image.ZP, draw.Src)
 		var buff bytes.Buffer
-		jpeg.Encode(&buff, img, &jpeg.Options{Quality: 50})
+		jpeg.Encode(&buff, img, &jpeg.Options{Quality: 100 - compression})
 		lastScreen = "data:image/jpeg;base64," + base64.StdEncoding.EncodeToString(buff.Bytes())
 		checkReduceFPS(imageStart)
 		time.Sleep(frameTime)
@@ -224,8 +230,32 @@ func screen(w http.ResponseWriter, r *http.Request) {
 			}
 		case "C":
 			c.Close()
+		case "O":
+			switch string(string(message)[2]) {
+				case "E":
+					checkMobileMode(strings.Split(r.URL.Path, "_")[1], true)
+				case "D":
+					checkMobileMode(strings.Split(r.URL.Path, "_")[1], false)
+			}
 		}
 	}
+}
+
+func checkMobileMode(id string, activate bool) {
+	fmt.Println("mobile mode toggled in socket: " + id)
+	intId, err := strconv.Atoi(id)
+	if err == nil {
+		mobileSockets[intId] = activate
+	}
+	for i := range mobileSockets {
+		if mobileSockets[i] {
+			mobileMode = true
+			fmt.Println("mobile mode remains active")
+			return
+		}
+	}
+	mobileMode = false
+	fmt.Println("mobile mode turned off")
 }
 
 func socketActivity(c *websocket.Conn, mt int, id string) {
@@ -304,6 +334,7 @@ func determineSocket() int {
 		}
 	}
 	sockets = append(sockets, false)
+	mobileSockets = append(mobileSockets, false)
 	fmt.Println("create and assign socket: " + strconv.Itoa(len(sockets)-1))
 	m.HandleFunc("/screen_"+strconv.Itoa(len(sockets)-1), screen)
 	return len(sockets) - 1
@@ -389,9 +420,12 @@ var port int
 var sessions int
 var frameTime time.Duration
 var lastScreen string
+var compression int
 var active = false
 var m *http.ServeMux
 var s http.Server
 var sockets []bool
+var mobileSockets []bool
+var mobileMode = false
 var speed bool
 var server = false

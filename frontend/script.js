@@ -96,6 +96,7 @@ document.getElementById("mobilemode").onchange = function (evt) {
     document.getElementById("screen").style.height = "100%";
     document.getElementById("screen").style.width = "100%";
     document.getElementById("screen").style["object-fit"] = "scale-down";
+    screenSocket.send("O-E");
   } else {
     document.getElementById("screencontainer").style.position = "";
     document.getElementById("screencontainer").style.height = "";
@@ -103,6 +104,7 @@ document.getElementById("mobilemode").onchange = function (evt) {
     document.getElementById("screen").style.height = "";
     document.getElementById("screen").style.width = "";
     document.getElementById("screen").style["object-fit"] = "";
+    screenSocket.send("O-D");
   }
 
 };
