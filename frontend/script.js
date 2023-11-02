@@ -1,5 +1,4 @@
 var screenSocket;
-var screenSocket;
 document.getElementById("start").onclick = function (evt) {
   var password = prompt("Enter Password");
   try{
@@ -106,29 +105,32 @@ document.getElementById("mobilemode").onchange = function (evt) {
     document.getElementById("screen").style["object-fit"] = "";
     screenSocket.send("O-D");
   }
-
 };
-window.addEventListener(
-  "keydown",
-  function (event) {
-    if (event.defaultPrevented) {
-      return;
-    }
-    if (document.getElementById("capturekey").checked) {
-      if (document.getElementById("queuekey").checked) {
-        screenSocket.send("K-Q-" + event.key);
-        event.preventDefault();
-        return false;
-      } else {
-        screenSocket.send("K-T-" + event.key);
-        event.preventDefault();
-        return false;
-      }
-    }
-  },
-  true
-);
 window.addEventListener("beforeunload", function(e){
   screenSocket.send("stop");
   screenSocket.close();
 });
+function keyboard(event){
+    let keyCode;
+    event.preventDefault();
+    keyCode = event.key;
+    if (!keyCode){
+       keyCode = document.getElementById("textbox").value.charAt(0);
+       document.getElementById("textbox").value = "";
+    }
+    if (document.getElementById("capturekey").checked && keyCode!="Unidentified"){
+      if (document.getElementById("queuekey").checked) {
+        screenSocket.send("K-Q-" + keyCode);
+        return false;
+      } else {
+        screenSocket.send("K-T-" + keyCode);
+        return false;
+      }
+    }
+}
+window.addEventListener(
+  "keydown",
+  keyboard ,
+  true
+);
+document.getElementById("textbox").addEventListener("input", keyboard, true);
